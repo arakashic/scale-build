@@ -88,6 +88,8 @@ base-packages:
   install_recommends: true
 - name: ifstat
   install_recommends: true
+- name: intel-qat
+  install_recommends: true
 - name: openzfs
   install_recommends: true
 - name: open-vm-tools
@@ -302,7 +304,7 @@ additional-packages:
   install_recommends: false
 - name: p7zip-rar
   comment: requested by community (NAS-131306) https://forums.truenas.com/t/accepted-add-unrar-7zip-to-truenas-scale/10075
-  install_recommends: false
+  install_recommends: true
 
 #
 # List of additional packages installed into TrueNAS SCALE ISO file
@@ -318,6 +320,7 @@ iso-packages:
 - python3-truenas-installer
 - udhcpc
 - vim-tiny
+- intel-qat
 
 #
 # List of Git source repositories the build will checkout and perform a debian
@@ -353,6 +356,7 @@ sources:
     # which results in misconfigured version due to our debian based changes
     - "rm -rf .git .gitattributes .gitignore"
     - "make defconfig"
+    - "sed -i 's/CONFIG_WERROR=y/# CONFIG_WERROR/' scripts/package/truenas/truenas.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/debian_amd64.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/truenas.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/tn-production.config"
@@ -386,6 +390,21 @@ sources:
 - name: nfs4xdr_acl_tools
   repo: https://github.com/truenas/nfs4xdr-acl-tools
   branch: release/24.10.1
+- name: intel-qat
+  repo: https://github.com/arakashic/intel-qat
+  branch: exp
+  batch_priority: 0
+  env:
+    KVERS: "$(shell apt info linux-headers-truenas-production-amd64 | awk '/Source:/ { print $$2}' | sed 's/linux-//')"
+  predepscmd:
+    - "rm -rf .git .gitattributes .gitignore"
+    - "tar xvf QAT.tar.gz -C ."
+  buildcmd:
+    - "dpkg-buildpackage -us -uc -b"
+    - "rm ../intel-qat-dbgsym*.deb"
+  explicit_deps:
+    - kernel
+  generate_version: false
 - name: openzfs
   repo: https://github.com/truenas/zfs
   batch_priority: 0
@@ -394,15 +413,17 @@ sources:
     KVERS: "$(shell apt info linux-headers-truenas-production-amd64 | awk '/Source:/ { print $$2}' | sed 's/linux-//')"
     KSRC: "/usr/src/linux-headers-$(KVERS)"
     KOBJ: "$(KSRC)"
+    ICP_ROOT: "/opt/intel-qat"
   predepscmd:
     - "cp -r contrib/debian debian"
     - "sed -i 's/libtool,/libtool, linux-image-truenas-production-amd64, linux-headers-truenas-production-amd64,/' debian/control"
+    - "sed -i 's/libtool,/libtool, intel-qat,/' debian/control"
   deps_path: contrib/debian
   prebuildcmd:
     - "sh autogen.sh"
     - "./configure"
     - "cp contrib/debian/changelog debian/changelog"
-    - "sed 's/@CFGOPTS@/--enable-debuginfo/g' debian/rules.in > debian/rules"
+    - "sed 's+@CFGOPTS@+--enable-debuginfo --with-qat=/opt/intel-qat+g' debian/rules.in > debian/rules"
     - "chmod +x debian/rules"
   buildcmd:
     - "dpkg-buildpackage -us -uc -b"
@@ -412,6 +433,7 @@ sources:
     - kernel
     - kernel-dbg
     - openssl
+    - intel-qat
   generate_version: false
   subpackages:
     - name: openzfs-dbg
@@ -549,6 +571,7 @@ sources:
   repo: https://github.com/truenas/zectl
   branch: release/24.10.1
   predepscmd:
+    - "apt -y install libblkid-dev uuid-dev zlib1g-dev"
     - "cp -a packaging/debian ."
   deps_path: packaging/debian
   explicit_deps:
