@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PARAM=${1:-all}
-export TRUENAS_VERSION=24.10.1-MASTER-qat
+export TRUENAS_VERSION=25.04-MASTER-qat_ksmbd
 export SKIP_SOURCE_REPO_VALIDATION=1
 
 case "$PARAM" in
