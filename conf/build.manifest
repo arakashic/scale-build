@@ -154,6 +154,8 @@ base-packages:
   install_recommends: false
 - name: truenas-audit-rules
   install_recommends: false
+- name: ksmbd-tools
+  install_recommends: true
 
 #
 # Packages which are removed from the base TrueNAS SCALE System by default
@@ -359,6 +361,8 @@ sources:
     - "rm -rf .git .gitattributes .gitignore"
     - "make defconfig"
     - "sed -i 's/CONFIG_WERROR=y/# CONFIG_WERROR/' scripts/package/truenas/truenas.config"
+    - "echo 'CONFIG_CIFS_SMB_DIRECT=y' >> scripts/package/truenas/debian_amd64.config"
+    - "echo 'CONFIG_SMB_SERVER_SMBDIRECT=y' >> scripts/package/truenas/debian_amd64.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/debian_amd64.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/truenas.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/tn-production.config"
@@ -392,6 +396,15 @@ sources:
 - name: nfs4xdr_acl_tools
   repo: https://github.com/truenas/nfs4xdr-acl-tools
   branch: release/25.04-BETA.1
+- name: ksmbd-tools
+  repo: https://github.com/arakashic/ksmbd-tools-truenas
+  branch: main
+  batch_priority: 0
+  predepscmd:
+    - "./checkout.sh"
+  buildcmd:
+    - "dpkg-buildpackage -us -uc -b"
+    - "rm ../ksmbd-tools-dbgsym*.deb"
 - name: intel-qat
   repo: https://github.com/arakashic/intel-qat
   branch: exp
