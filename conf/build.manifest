@@ -446,8 +446,8 @@ sources:
     - "cp -r contrib/debian debian"
     - "sed -i 's/libtool,/libtool, linux-image-truenas-production-amd64, linux-headers-truenas-production-amd64,/' debian/control"
     - "sed -i 's/libtool,/libtool, intel-qat,/' debian/control"
-    - "sed -i 's/QAT_DC_MAX_INSTANCES\t48/QAT_DC_MAX_INSTANCES\t64/' module/os/linux/zfs/qat_compress.c"
-    - "sed -i 's/QAT_CRYPT_MAX_INSTANCES\t48/QAT_CRYPT_MAX_INSTANCES\t64/' module/os/linux/zfs/qat_crypt.c"
+    - "curl --output qzfs.patch 'https://gist.githubusercontent.com/arakashic/3de54ecf8f355f315e45632ea964fef0/raw/4e37b37946a08c4155b9eef3f25503326ee7c41e/patch'"
+    - "git am qzfs.patch"
   deps_path: contrib/debian
   prebuildcmd:
     - "sh autogen.sh"
