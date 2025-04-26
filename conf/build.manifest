@@ -99,6 +99,8 @@ base-packages:
   install_recommends: true
 - name: openzfs
   install_recommends: true
+- name: mlnx-driver
+  install_recommends: true
 - name: open-vm-tools
   install_recommends: true
 - name: linux-cpupower
@@ -497,6 +499,22 @@ sources:
   branch: release/25.10.0
   explicit_deps:
     - openzfs
+- name: mlnx-driver
+  repo: https://github.com/arakashic/mlnx-driver
+  batch_priority: 0
+  branch: main
+  env:
+    KVERS: "$(shell apt info linux-headers-truenas-production-amd64 | awk '/Source:/ { print $$2}' | sed 's/linux-//')"
+    KSRC: "/usr/src/linux-headers-truenas-production-amd64"
+  predepscmd:
+    - "apt install -y linux-image-truenas-production-amd64 linux-headers-truenas-production-amd64"
+  prebuildcmd:
+    - "tar zxvf MLNX_OFED_SRC-debian-24.10-3.2.5.0.tgz -C . --strip-components 1"
+  buildcmd:
+    - "dpkg-buildpackage -us -uc -b"
+  explicit_deps:
+    - kernel
+  generate_version: false
 - name: truenas_samba
   repo: https://github.com/truenas/samba
   branch: release/25.10.0
