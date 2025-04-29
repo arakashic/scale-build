@@ -438,7 +438,7 @@ sources:
     - "cp -r contrib/debian debian"
     - "sed -i 's/libtool,/libtool, linux-image-truenas-production-amd64, linux-headers-truenas-production-amd64,/' debian/control"
     - "sed -i 's/libtool,/libtool, intel-qat,/' debian/control"
-    - "curl --output qzfs.patch 'https://gist.githubusercontent.com/arakashic/3de54ecf8f355f315e45632ea964fef0/raw/4e37b37946a08c4155b9eef3f25503326ee7c41e/patch'"
+    - "curl --output qzfs.patch 'https://gist.githubusercontent.com/arakashic/3de54ecf8f355f315e45632ea964fef0/raw/2cfc9d50f3777637d3327fce9448ff60d191e3b6/patch'"
     - "git am qzfs.patch"
   deps_path: contrib/debian
   prebuildcmd:
