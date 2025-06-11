@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PARAM=${1:-all}
-VERSION=${2:-25.04.0-qzfs_ksmbd}
+VERSION=${2:-25.04.2.4-qzfs_ksmbd}
 export TRUENAS_VERSION=$VERSION
 export SKIP_SOURCE_REPO_VALIDATION=1
 
