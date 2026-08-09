@@ -10,6 +10,8 @@ case "$PARAM" in
         make checkout
         PACKAGES=kernel PARALLEL_BUILDS=1 make packages
         PACKAGES=kernel-dbg PARALLEL_BUILDS=1 make packages
+        PACKAGES=openzfs PARALLEL_BUILDS=1 make packages
+        PACKAGES=openzfs-dbg PARALLEL_BUILDS=1 make packages
         make
     ;;
     all)
