@@ -137,8 +137,6 @@ base-packages:
   install_recommends: true
 - name: cifs-utils
   install_recommends: true
-- name: nfs4xdr-acl-tools
-  install_recommends: true
 - name: nfs4-acl-tools
   install_recommends: true
 - name: qemu-guest-agent
@@ -423,9 +421,6 @@ sources:
       buildcmd:
         - "rm -rf .config.old"
         - "make -j$(nproc) bindeb-pkg"
-- name: nfs4xdr_acl_tools
-  repo: https://github.com/truenas/nfs4xdr-acl-tools
-  branch: master
 - name: ksmbd-tools
   repo: https://github.com/arakashic/ksmbd-tools-truenas
   branch: truenas-3.5.6
