@@ -181,7 +181,8 @@ class NvidiaExtension(Extension):
                             "--allow-installation-with-running-driver",
                             "--no-rebuild-initramfs",
                             "--kernel-module-type=open",
-                            "--tmpdir=/tmp/nvidia-installer",
+                            "--tmpdir",
+                            "/tmp/nvidia-installer",
                             "--log-file-name=/tmp/nvidia-installer/nvidia-installer.log",
                         ]
                     )
