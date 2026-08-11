@@ -96,6 +96,7 @@ class BuildPackageMixin:
             os.makedirs(os.path.join(self.package_source_with_chroot, 'etc'), exist_ok=True)
             with open(os.path.join(self.package_source_with_chroot, 'etc/version'), 'w') as f:
                 f.write(VERSION)
+            os.makedirs(os.path.join(self.package_source_with_chroot, 'usr'), exist_ok=True)
 
         for prebuild_command in self.prebuildcmd:
             self.logger.debug('Running prebuildcmd: %r', prebuild_command)

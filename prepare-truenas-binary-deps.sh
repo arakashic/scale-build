@@ -10,6 +10,7 @@ CACHE_DIR=${TRUENAS_BINARY_DEPS_CACHE:-"$SCRIPT_DIR/tmp/truenas-binary-deps"}
 OUTPUT_DIR=${TRUENAS_BINARY_DEPS_OUTPUT:-"$SCRIPT_DIR/tmp/pkgdir"}
 
 PACKAGES=(
+    python3-truenas-pydiscovery
     python3-truenas-pysnmp
     python3-truenas-pylibsed
     python3-truenas-pylicensed
@@ -18,6 +19,7 @@ PACKAGES=(
 )
 
 EXPECTED_FILES=(
+    python3-truenas-pydiscovery_20260805022332~truenas+1_all.deb
     python3-truenas-pysnmp_20260805022623~truenas+1_amd64.deb
     python3-truenas-pylibsed_20260805022829~truenas+1_amd64.deb
     python3-truenas-pylicensed_20260805020933~truenas+1_amd64.deb
