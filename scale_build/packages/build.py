@@ -96,7 +96,24 @@ class BuildPackageMixin:
             os.makedirs(os.path.join(self.package_source_with_chroot, 'etc'), exist_ok=True)
             with open(os.path.join(self.package_source_with_chroot, 'etc/version'), 'w') as f:
                 f.write(VERSION)
-            os.makedirs(os.path.join(self.package_source_with_chroot, 'usr'), exist_ok=True)
+            with open(os.path.join(self.package_source_with_chroot, 'etc/issue.truenas'), 'w') as f:
+                f.write(f'TrueNAS {VERSION} \\n \\l\n')
+            with open(os.path.join(self.package_source_with_chroot, 'etc/issue.net.truenas'), 'w') as f:
+                f.write(f'TrueNAS {VERSION}\n')
+            os.makedirs(os.path.join(self.package_source_with_chroot, 'usr/lib'), exist_ok=True)
+            with open(os.path.join(self.package_source_with_chroot, 'usr/lib/os-release.truenas'), 'w') as f:
+                f.write(
+                    f'PRETTY_NAME="TrueNAS {VERSION}"\n'
+                    'NAME="TrueNAS"\n'
+                    f'VERSION="{VERSION}"\n'
+                    'ID=truenas\n'
+                    'ID_LIKE=debian\n'
+                    'HOME_URL="https://www.truenas.com"\n'
+                    'DOCUMENTATION_URL="https://www.truenas.com/docs"\n'
+                    'SUPPORT_URL="https://forums.truenas.com"\n'
+                    'BUG_REPORT_URL="https://ixsystems.atlassian.net/jira"\n'
+                    'PRIVACY_POLICY="https://www.truenas.com/legal/privacy-policy"\n'
+                )
 
         for prebuild_command in self.prebuildcmd:
             self.logger.debug('Running prebuildcmd: %r', prebuild_command)
