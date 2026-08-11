@@ -95,6 +95,8 @@ base-packages:
   install_recommends: true
 - name: ifstat
   install_recommends: true
+- name: intel-qat
+  install_recommends: true
 - name: openzfs
   install_recommends: true
 - name: open-vm-tools
@@ -187,6 +189,8 @@ base-packages:
   install_recommends: false
 - name: restic
   install_recommends: false
+- name: ksmbd-tools
+  install_recommends: true
 
 #
 # Packages which are removed from the base TrueNAS SCALE System by default
@@ -352,6 +356,7 @@ iso-packages:
 - python3-truenas-installer
 - udhcpc
 - vim-tiny
+- intel-qat
 # Must be the last package as installing it breaks /etc/resolv.conf in chroot
 - systemd-resolved
 
@@ -366,7 +371,7 @@ iso-packages:
 sources:
 - name: truenas-openssl-provider-fips
   repo: https://github.com/truenas/openssl-fips
-  branch: master
+  branch: stable/26
   predepscmd:
     - "apt install -y wget xz-utils"
 - name: kernel
@@ -385,6 +390,9 @@ sources:
     # which results in misconfigured version due to our debian based changes
     - "rm -rf .git .gitattributes .gitignore"
     - "make defconfig"
+    - "sed -i 's/CONFIG_WERROR=y/# CONFIG_WERROR/' scripts/package/truenas/truenas.config"
+    - "echo 'CONFIG_CIFS_SMB_DIRECT=y' >> scripts/package/truenas/debian_amd64.config"
+    - "echo 'CONFIG_SMB_SERVER_SMBDIRECT=y' >> scripts/package/truenas/debian_amd64.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/debian_amd64.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/truenas.config"
     - "./scripts/kconfig/merge_config.sh .config scripts/package/truenas/tn-production.config"
@@ -418,6 +426,30 @@ sources:
 - name: nfs4xdr_acl_tools
   repo: https://github.com/truenas/nfs4xdr-acl-tools
   branch: master
+- name: ksmbd-tools
+  repo: https://github.com/arakashic/ksmbd-tools-truenas
+  branch: truenas-3.5.6
+  batch_priority: 0
+  predepscmd:
+    - "./checkout.sh"
+  buildcmd:
+    - "dpkg-buildpackage -us -uc -b"
+    - "rm ../ksmbd-tools-dbgsym*.deb"
+- name: intel-qat
+  repo: https://github.com/arakashic/intel-qat
+  branch: truenas-linux-6.18
+  batch_priority: 0
+  env:
+    KVERS: "$(shell apt info linux-headers-truenas-production-amd64 | awk '/Source:/ { print $$2}' | sed 's/linux-//')"
+  predepscmd:
+    - "rm -rf .git .gitattributes .gitignore"
+    - "tar xvf QAT.tar.gz -C ."
+  buildcmd:
+    - "dpkg-buildpackage -us -uc -b"
+    - "rm ../intel-qat-dbgsym*.deb"
+  explicit_deps:
+    - kernel
+  generate_version: false
 - name: openzfs
   repo: https://github.com/truenas/zfs
   batch_priority: 0
@@ -426,15 +458,19 @@ sources:
     KVERS: "$(shell apt info linux-headers-truenas-production-amd64 | awk '/Source:/ { print $$2}' | sed 's/linux-//')"
     KSRC: "/usr/src/linux-headers-truenas-production-amd64"
     KOBJ: "$(KSRC)"
+    ICP_ROOT: "/opt/intel-qat"
   predepscmd:
     - "cp -r contrib/debian debian"
     - "sed -i 's/libtool,/libtool, linux-image-truenas-production-amd64, linux-headers-truenas-production-amd64,/' debian/control"
+    - "sed -i 's/libtool,/libtool, intel-qat,/' debian/control"
+    - "curl --output qzfs.patch 'https://gist.githubusercontent.com/arakashic/3de54ecf8f355f315e45632ea964fef0/raw/2cfc9d50f3777637d3327fce9448ff60d191e3b6/patch'"
+    - "git am qzfs.patch"
   deps_path: contrib/debian
   prebuildcmd:
     - "sh autogen.sh"
     - "./configure"
     - "cp contrib/debian/changelog debian/changelog"
-    - "sed 's/@CFGOPTS@/--enable-debuginfo/g' debian/rules.in > debian/rules"
+    - "sed 's+@CFGOPTS@+--enable-debuginfo --with-qat=/opt/intel-qat+g' debian/rules.in > debian/rules"
     - "chmod +x debian/rules"
   buildcmd:
     - "dpkg-buildpackage -us -uc -b"
@@ -443,6 +479,7 @@ sources:
   explicit_deps:
     - kernel
     - kernel-dbg
+    - intel-qat
   generate_version: false
   subpackages:
     - name: openzfs-dbg
@@ -472,40 +509,40 @@ sources:
       generate_version: false
 - name: truenas_pylibvirt
   repo: https://github.com/truenas/truenas_pylibvirt
-  branch: master
+  branch: stable/26
 - name: truenas_pynetif
   repo: https://github.com/truenas/truenas_pynetif
-  branch: master
+  branch: stable/26
 - name: truenas_pylibzfs
   repo: https://github.com/truenas/truenas_pylibzfs
-  branch: master
+  branch: stable/26
   explicit_deps:
     - openzfs
 - name: truenas_pykeyring
   repo: https://github.com/truenas/truenas_pykeyring
-  branch: master
+  branch: stable/26
 - name: truenas_pyos
   repo: https://github.com/truenas/truenas_pyos
-  branch: master
+  branch: stable/26
   predepscmd:
     - "apt install -y linux-truenas-production-libc-dev"
   explicit_deps:
     - kernel
 - name: truenas_pwenc
   repo: https://github.com/truenas/truenas_pwenc
-  branch: master
+  branch: stable/26
 - name: truenas_scram
   repo: https://github.com/truenas/truenas_scram
-  branch: master
+  branch: stable/26
 - name: truenas_pypam
   repo: https://github.com/truenas/truenas_pypam
-  branch: master
+  branch: stable/26
 - name: pam_truenas
   repo: https://github.com/truenas/pam_truenas
   explicit_deps:
     - truenas_pwenc
     - truenas_scram
-  branch: master
+  branch: stable/26
 - name: truenas_samba
   repo: https://github.com/truenas/samba
   branch: SCALE-v4-23-stable
@@ -515,7 +552,7 @@ sources:
     - openzfs
 - name: truenas_pyscstadmin
   repo: https://github.com/truenas/truenas_pyscstadmin
-  branch: master
+  branch: stable/26
   buildcmd:
     - "dpkg-buildpackage -us -uc -b"
 - name: truenas_sssd
@@ -540,7 +577,7 @@ sources:
     - truenas_sssd
 - name: truenas_spdk
   repo: https://github.com/truenas/truenas_spdk
-  branch: master
+  branch: stable/26
   generate_version: false
   env:
     PIP_BREAK_SYSTEM_PACKAGES: "1"
@@ -558,21 +595,21 @@ sources:
   generate_version: false
 - name: py_libzfs
   repo: https://github.com/truenas/py-libzfs
-  branch: master
+  branch: stable/26
   explicit_deps:
     - openzfs
 - name: zettarepl
   repo: https://github.com/truenas/zettarepl
-  branch: master
+  branch: stable/26
 - name: truenas_crypto_utils
   repo: https://github.com/truenas/truenas_crypto_utils
-  branch: master
+  branch: stable/26
 - name: truenas_connect_utils
   repo: https://github.com/truenas/truenas_connect_utils
-  branch: master
+  branch: stable/26
 - name: truenas_installer
   repo: https://github.com/truenas/truenas-installer
-  branch: master
+  branch: stable/26
 - name: scst
   repo: https://github.com/truenas/scst
   generate_version: false
@@ -612,7 +649,7 @@ sources:
         - kernel-dbg
 - name: truenas_binaries
   repo: https://github.com/truenas/binaries
-  branch: master
+  branch: stable/26
 - name: truenas_webui
   repo: https://github.com/truenas/webui
   env:
@@ -625,23 +662,23 @@ sources:
     - "yarn install --immutable --network-timeout 100000"
     - "tar cvzf node_files.tgz node_modules/"
     - "rm -rf node_modules"
-  branch: master
+  branch: stable/26
   secret_env: ["SENTRY_AUTH_TOKEN"]
 - name: sedutil
   repo: https://github.com/truenas/sedutil
-  branch: master
+  branch: stable/26
 - name: python_netsnmpagent
   repo: https://github.com/truenas/python-netsnmpagent
   branch: truenas/0.6.1
 - name: python_truenas_requirements
   repo: https://github.com/truenas/python-truenas-requirements
-  branch: master
+  branch: stable/26
 - name: licenselib
   repo: https://github.com/truenas/licenselib
   branch: master
 - name: zectl
   repo: https://github.com/truenas/zectl
-  branch: master
+  branch: stable/26
   predepscmd:
     - "cp -a packaging/debian ."
   deps_path: packaging/debian
@@ -649,28 +686,30 @@ sources:
     - openzfs
 - name: ixdiagnose
   repo: https://github.com/truenas/ixdiagnose
-  branch: master
+  branch: stable/26
 - name: ixhardware
   repo: https://github.com/truenas/ixhardware
-  branch: master
+  branch: stable/26
 - name: apps_validation
   repo: https://github.com/truenas/apps_validation
-  branch: master
+  branch: stable/26
+  explicit_deps:
+    - truenas_pyos
 - name: py_cryptit
   repo: https://github.com/truenas/py-cryptit
-  branch: master
+  branch: stable/26
 - name: py_sgio
   repo: https://github.com/truenas/py-sgio
-  branch: master
+  branch: stable/26
 - name: py_fenced
   repo: https://github.com/truenas/py-fenced
-  branch: master
+  branch: stable/26
 - name: py_nvme
   repo: https://github.com/truenas/py-nvme
-  branch: master
+  branch: stable/26
 - name: truenas
   repo: https://github.com/truenas/middleware
-  branch: master
+  branch: stable/26
   subdir: debian
   subpackages:
     - name: middlewared
@@ -688,16 +727,16 @@ sources:
       subdir: src/freenas
 - name: truenas_api_client
   repo: https://github.com/truenas/api_client
-  branch: master
+  branch: stable/26
 - name: truenas_verify
   repo: https://github.com/truenas/truenas_verify
-  branch: master
+  branch: stable/26
 - name: midcli
   repo: https://github.com/truenas/midcli
-  branch: master
+  branch: stable/26
 - name: grub2
   repo: https://github.com/truenas/grub2
-  branch: master
+  branch: stable/26
   debian_fork: true
   predepscmd:
     - "apt install -y wget xz-utils"
@@ -717,15 +756,15 @@ sources:
   generate_version: false
 - name: rclone
   repo: https://github.com/truenas/rclone
-  branch: master
+  branch: stable/26
   deoptions: nocheck
   generate_version: false
 - name: py_sg3
   repo: https://github.com/truenas/py-sg3
-  branch: master
+  branch: stable/26
 - name: smartmontools
   repo: https://github.com/truenas/smartmontools
-  branch: master
+  branch: stable/26
   debian_fork: true
   predepscmd:
     - "apt install -y wget xz-utils"
@@ -734,7 +773,7 @@ sources:
   generate_version: false
 - name: truenas_audit_rules
   repo: https://github.com/truenas/audit_rules.git
-  branch: master
+  branch: stable/26
   generate_version: false
 - name: nfs_utils
   repo: https://github.com/truenas/nfs-utils.git

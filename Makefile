@@ -31,7 +31,10 @@ check_upstream_package_updates: check
 	. ./venv-${COMMIT_HASH}/bin/activate && scale_build check_upstream_package_updates
 iso: check
 	. ./venv-${COMMIT_HASH}/bin/activate && scale_build iso
-packages: check
+prepare_binary_deps:
+	./prepare-truenas-binary-deps.sh
+
+packages: check prepare_binary_deps
 ifeq ($(PACKAGES),"")
 	. ./venv-${COMMIT_HASH}/bin/activate && scale_build packages
 else

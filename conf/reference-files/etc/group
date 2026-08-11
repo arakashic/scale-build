@@ -91,3 +91,4 @@ polkitd:x:998:
 netdata:x:997:
 sssd:x:122:
 caddy:x:994:
+qat:x:1000:
