@@ -10,21 +10,27 @@ CACHE_DIR=${TRUENAS_BINARY_DEPS_CACHE:-"$SCRIPT_DIR/tmp/truenas-binary-deps"}
 OUTPUT_DIR=${TRUENAS_BINARY_DEPS_OUTPUT:-"$SCRIPT_DIR/tmp/pkgdir"}
 
 PACKAGES=(
+    libtruenas-licensed-dev
     python3-truenas-pydiscovery
     python3-truenas-pysnmp
     python3-truenas-pylibsed
     python3-truenas-pylicensed
     python3-truenas-zfstierd
+    truenas-file-manager
     truenas-licensed
+    truesearch
 )
 
 EXPECTED_FILES=(
+    libtruenas-licensed-dev_20260805020933~truenas+1_amd64.deb
     python3-truenas-pydiscovery_20260805022332~truenas+1_all.deb
     python3-truenas-pysnmp_20260805022623~truenas+1_amd64.deb
     python3-truenas-pylibsed_20260805022829~truenas+1_amd64.deb
     python3-truenas-pylicensed_20260805020933~truenas+1_amd64.deb
     python3-truenas-zfstierd_20260805031958~truenas+1_amd64.deb
+    truenas-file-manager_20260805021623~truenas+1_amd64.deb
     truenas-licensed_20260805020933~truenas+1_amd64.deb
+    truesearch_20260805020935~truenas+1_amd64.deb
 )
 
 for command_name in bsdtar curl dpkg-deb dpkg-query sha256sum tar unsquashfs; do
