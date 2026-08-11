@@ -14,6 +14,14 @@ from .utils.run import run
 
 logger = logging.getLogger(__name__)
 
+NVIDIA_590_LINUX_6_18_PATCH = """\
+--- kernel-open/nvidia/nv-pci.c
++++ kernel-open/nvidia/nv-pci.c
+@@ -247 +247 @@ resize:
+-    r = pci_resize_resource(pci_dev, NV_GPU_BAR1, requested_size);
++    r = pci_resize_resource(pci_dev, NV_GPU_BAR1, requested_size, 0);
+"""
+
 
 def build_extensions(rootfs_image, dst_dir):
     chroot = os.path.join(TMPFS, "extensions_chroot")
@@ -151,30 +159,48 @@ class NvidiaExtension(Extension):
             f.write("deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] "
                     "https://nvidia.github.io/libnvidia-container/stable/deb/$(ARCH) /")
 
-    def download_nvidia_driver(self):
+    def download_nvidia_driver(self, dst_dir):
         prefix = "https://us.download.nvidia.com/XFree86/Linux-x86_64"
 
         version = get_manifest()["extensions"]["nvidia"]["current"]
         filename = f"NVIDIA-Linux-x86_64-{version}-no-compat32.run"
-        result = f"{self.chroot}/{filename}"
+        result = os.path.join(self.chroot, dst_dir.lstrip("/"), filename)
 
-        self.run(["wget", "-c", "-O", f"/{filename}", f"{prefix}/{version}/{filename}"])
+        self.run(["wget", "-c", "-O", f"{dst_dir}/{filename}", f"{prefix}/{version}/{filename}"])
 
         os.chmod(result, 0o755)
         return result
 
     def install_nvidia_driver(self, kernel_version):
-        driver = self.download_nvidia_driver()
-
         chroot_tmp_dir = os.path.join(self.chroot, "tmp/nvidia-installer")
         os.makedirs(chroot_tmp_dir, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="nvidia-installer.", dir=TMP_DIR) as installer_tmp_dir:
             run(["mount", "--bind", installer_tmp_dir, chroot_tmp_dir])
             try:
+                driver = self.download_nvidia_driver("/tmp/nvidia-installer")
+
+                if get_manifest()["extensions"]["nvidia"]["current"] == "590.44.01":
+                    patch_name = "nvidia-590-linux-6.18.patch"
+                    with open(os.path.join(installer_tmp_dir, patch_name), "w") as f:
+                        f.write(NVIDIA_590_LINUX_6_18_PATCH)
+
+                    self.run(
+                        [
+                            "/bin/sh",
+                            "-c",
+                            f"cd /tmp/nvidia-installer && ./{os.path.basename(driver)} "
+                            f"--apply-patch /tmp/nvidia-installer/{patch_name} "
+                            "--tmpdir /tmp/nvidia-installer",
+                        ]
+                    )
+                    custom_driver = os.path.splitext(driver)[0] + "-custom.run"
+                    os.unlink(driver)
+                    driver = custom_driver
+
                 try:
                     self.run(
                         [
-                            f"/{os.path.basename(driver)}",
+                            f"/tmp/nvidia-installer/{os.path.basename(driver)}",
                             "--skip-module-load",
                             "--silent",
                             f"--kernel-name={kernel_version}",
@@ -193,5 +219,3 @@ class NvidiaExtension(Extension):
                     raise
             finally:
                 run(["umount", chroot_tmp_dir], check=False)
-
-        os.unlink(driver)
