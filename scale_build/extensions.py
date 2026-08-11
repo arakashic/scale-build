@@ -171,18 +171,25 @@ class NvidiaExtension(Extension):
         with tempfile.TemporaryDirectory(prefix="nvidia-installer.", dir=TMP_DIR) as installer_tmp_dir:
             run(["mount", "--bind", installer_tmp_dir, chroot_tmp_dir])
             try:
-                self.run(
-                    [
-                        f"/{os.path.basename(driver)}",
-                        "--skip-module-load",
-                        "--silent",
-                        f"--kernel-name={kernel_version}",
-                        "--allow-installation-with-running-driver",
-                        "--no-rebuild-initramfs",
-                        "--kernel-module-type=open",
-                        "--tmpdir=/tmp/nvidia-installer",
-                    ]
-                )
+                try:
+                    self.run(
+                        [
+                            f"/{os.path.basename(driver)}",
+                            "--skip-module-load",
+                            "--silent",
+                            f"--kernel-name={kernel_version}",
+                            "--allow-installation-with-running-driver",
+                            "--no-rebuild-initramfs",
+                            "--kernel-module-type=open",
+                            "--tmpdir=/tmp/nvidia-installer",
+                            "--log-file-name=/tmp/nvidia-installer/nvidia-installer.log",
+                        ]
+                    )
+                except Exception:
+                    installer_log = os.path.join(installer_tmp_dir, "nvidia-installer.log")
+                    if os.path.exists(installer_log):
+                        shutil.copy2(installer_log, os.path.join("logs", "nvidia-installer.log"))
+                    raise
             finally:
                 run(["umount", chroot_tmp_dir], check=False)
 
