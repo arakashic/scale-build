@@ -2,13 +2,14 @@ import errno
 import logging
 import os
 import shutil
+import tempfile
 
 import requests
 
 from .image.utils import run_in_chroot
 from .utils.kernel import get_kernel_version
 from .utils.manifest import get_manifest
-from .utils.paths import TMPFS, PKG_DIR
+from .utils.paths import PKG_DIR, TMP_DIR, TMPFS
 from .utils.run import run
 
 logger = logging.getLogger(__name__)
@@ -165,16 +166,24 @@ class NvidiaExtension(Extension):
     def install_nvidia_driver(self, kernel_version):
         driver = self.download_nvidia_driver()
 
-        self.run(
-            [
-                f"/{os.path.basename(driver)}",
-                "--skip-module-load",
-                "--silent",
-                f"--kernel-name={kernel_version}",
-                "--allow-installation-with-running-driver",
-                "--no-rebuild-initramfs",
-                "--kernel-module-type=open"
-            ]
-        )
+        chroot_tmp_dir = os.path.join(self.chroot, "tmp/nvidia-installer")
+        os.makedirs(chroot_tmp_dir, exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix="nvidia-installer.", dir=TMP_DIR) as installer_tmp_dir:
+            run(["mount", "--bind", installer_tmp_dir, chroot_tmp_dir])
+            try:
+                self.run(
+                    [
+                        f"/{os.path.basename(driver)}",
+                        "--skip-module-load",
+                        "--silent",
+                        f"--kernel-name={kernel_version}",
+                        "--allow-installation-with-running-driver",
+                        "--no-rebuild-initramfs",
+                        "--kernel-module-type=open",
+                        "--tmpdir=/tmp/nvidia-installer",
+                    ]
+                )
+            finally:
+                run(["umount", chroot_tmp_dir], check=False)
 
         os.unlink(driver)
