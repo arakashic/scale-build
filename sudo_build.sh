@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PARAM=${1:-all}
-VERSION=${2:-26.0.0-qzfs_ksmbd}
+VERSION=${2:-26.0.0-qzfs_ksmbd_qat428}
 export TRUENAS_VERSION=$VERSION
 export SKIP_SOURCE_REPO_VALIDATION=1
 export PARALLEL_BUILDS=${PARALLEL_BUILDS:-2}
