@@ -142,6 +142,19 @@ def audit(iso, update, version):
                                        ("uio", "intel_qat", "qat_api", "spl", "zfs"))
                         compare_initrd_payload(rootfs / "boot" / f"initrd.img-{kernel}", rootfs, parent)
                         zfs_load_plan(rootfs, kernel)
+                        require("3.5.6" in run("chroot", str(rootfs), "/usr/sbin/ksmbd.mountd", "--version"),
+                                "installed ksmbd-tools executable reports version 3.5.6")
+                        qat_version = run("dpkg-query", f"--admindir={rootfs}/var/lib/dpkg", "-W",
+                                          "-f=${Version}", "intel-qat")
+                        require("4.28.0-00004" in qat_version, "installed QAT package is CE 4.28.0-00004")
+                        extension = rootfs / "usr/share/truenas/sysext-extensions/nvidia.raw"
+                        with mounted(extension, parent, "nvidia") as nvidia:
+                            drivers = list(nvidia.rglob("nvidia.ko"))
+                            require(len(drivers) == 1, "NVIDIA extension contains one primary kernel module")
+                            require(run("modinfo", "-F", "version", str(drivers[0])).strip() == "580.173.02",
+                                    "NVIDIA extension matches BETA.3 driver 580.173.02")
+                            require(run("modinfo", "-F", "vermagic", str(drivers[0])).split()[0] == kernel,
+                                    "NVIDIA extension module matches production kernel")
                         print(run("dpkg-query", f"--admindir={rootfs}/var/lib/dpkg", "-W",
                                   "-f=${Package}\t${Version}\n", "intel-qat", "ksmbd-tools", "middlewared",
                                   f"openzfs-zfs-modules-{kernel}"), end="")
