@@ -1,0 +1,311 @@
+{
+  "release": "26.0.0-BETA.3",
+  "sources": [
+    {
+      "name": "truenas-openssl-provider-fips",
+      "repo": "https://github.com/truenas/openssl-fips",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "6b1518de99e29d5eedb879de662468989548efbc"
+    },
+    {
+      "name": "kernel",
+      "repo": "https://github.com/truenas/linux",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "14bc90bf6f56af8140a024b98318594750228f5a"
+    },
+    {
+      "name": "ksmbd-tools",
+      "repo": "https://github.com/arakashic/ksmbd-tools-truenas",
+      "ref": "truenas-3.5.6",
+      "commit": "6df2a42eb1a852de6870f33256969600c23f9178"
+    },
+    {
+      "name": "intel-qat",
+      "repo": "https://github.com/arakashic/intel-qat",
+      "ref": "truenas-linux-6.18",
+      "commit": "6fb5f03ff84f3a6df18a57d9c7391b5dc92ff359"
+    },
+    {
+      "name": "openzfs",
+      "repo": "https://github.com/truenas/zfs",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "d11defe4a0788840fe25a5fa11cfe661c9cfd83b"
+    },
+    {
+      "name": "truenas_pylibvirt",
+      "repo": "https://github.com/truenas/truenas_pylibvirt",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "6ccdec5a8149566b67f612d527c3f1309fbc634b"
+    },
+    {
+      "name": "truenas_pynetif",
+      "repo": "https://github.com/truenas/truenas_pynetif",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "fcfc436ea856cdc3e649abfcbc07d7fdec0325b2"
+    },
+    {
+      "name": "truenas_pylibzfs",
+      "repo": "https://github.com/truenas/truenas_pylibzfs",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "ccf4def30437f7c8bbc727798193ca44b74a07df"
+    },
+    {
+      "name": "truenas_pykeyring",
+      "repo": "https://github.com/truenas/truenas_pykeyring",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "798c666f4c9cd68c03a5a8b0182e8dbe0f9d86d6"
+    },
+    {
+      "name": "truenas_pyos",
+      "repo": "https://github.com/truenas/truenas_pyos",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "47eddbdf774d9339a01d7c4cf7043a71a46cead1"
+    },
+    {
+      "name": "truenas_pwenc",
+      "repo": "https://github.com/truenas/truenas_pwenc",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "ebc87445ee170b5e5225445f1871b5b99c7e3d94"
+    },
+    {
+      "name": "truenas_scram",
+      "repo": "https://github.com/truenas/truenas_scram",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "414f0b913476729cba9e0d36b5ca548f629d5661"
+    },
+    {
+      "name": "truenas_pypam",
+      "repo": "https://github.com/truenas/truenas_pypam",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "fe2587c8edbbaabd002cbcc81332ca49e6a2c28b"
+    },
+    {
+      "name": "pam_truenas",
+      "repo": "https://github.com/truenas/pam_truenas",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "418163fc154d0c37b12f6ce837a0f0ae82daf273"
+    },
+    {
+      "name": "truenas_samba",
+      "repo": "https://github.com/truenas/samba",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "8e660b4f305e470f51290ddf1668ecc332260d92"
+    },
+    {
+      "name": "truenas_pyscstadmin",
+      "repo": "https://github.com/truenas/truenas_pyscstadmin",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "1c97753f62e5db5a0d8cbdeeab2b74aba7760d54"
+    },
+    {
+      "name": "truenas_sssd",
+      "repo": "https://github.com/truenas/sssd",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "cf7ce174951b9251ce77b0fb4959f76c4ba81c4a"
+    },
+    {
+      "name": "truenas_ipaclient",
+      "repo": "https://github.com/truenas/freeipa",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "3337412e46de74cacf98c062f651132e3c94d8bb"
+    },
+    {
+      "name": "truenas_spdk",
+      "repo": "https://github.com/truenas/truenas_spdk",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "1afaaf27e11776d83834dd160b1b40ead23ee560"
+    },
+    {
+      "name": "avahi",
+      "repo": "https://github.com/truenas/avahi",
+      "ref": "SCALE-v0.8",
+      "commit": "d87dcc54ec27fce5a143076e62f5b80c3989802e"
+    },
+    {
+      "name": "py_libzfs",
+      "repo": "https://github.com/truenas/py-libzfs",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "33e01e9f8574e90c44c71a3ab62726540ca12c01"
+    },
+    {
+      "name": "zettarepl",
+      "repo": "https://github.com/truenas/zettarepl",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "0c5a5cb12019c911ae7f7ceaa30c5ea086a91ae5"
+    },
+    {
+      "name": "truenas_crypto_utils",
+      "repo": "https://github.com/truenas/truenas_crypto_utils",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "00fef7fd612444b35f8b4753ace904e3b95eb11e"
+    },
+    {
+      "name": "truenas_connect_utils",
+      "repo": "https://github.com/truenas/truenas_connect_utils",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "b55f752d4f31cd6b9140fcbd534dd2cb8cc9705d"
+    },
+    {
+      "name": "truenas_installer",
+      "repo": "https://github.com/truenas/truenas-installer",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "cdf7df94963918013ce74af418bacc9b10298157"
+    },
+    {
+      "name": "scst",
+      "repo": "https://github.com/truenas/scst",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "4ea3eabeba2bb9d7366ada81bc882051550120d3"
+    },
+    {
+      "name": "truenas_binaries",
+      "repo": "https://github.com/truenas/binaries",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "5c0904338e485b2b72489fedc9069e28de84dfaf"
+    },
+    {
+      "name": "truenas_webui",
+      "repo": "https://github.com/truenas/webui",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "dcf78a7655313d3cd125917d196f4c15bbc98516"
+    },
+    {
+      "name": "sedutil",
+      "repo": "https://github.com/truenas/sedutil",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "8266f07723d7829bfba4a8d1491f62fe65bcb567"
+    },
+    {
+      "name": "python_netsnmpagent",
+      "repo": "https://github.com/truenas/python-netsnmpagent",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "9fd574ad600fbbf1702c70e85a4f5c50ba2e8d53"
+    },
+    {
+      "name": "python_truenas_requirements",
+      "repo": "https://github.com/truenas/python-truenas-requirements",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "02fe76bb8df5399f002fc2dc7c692a2aa579b98b"
+    },
+    {
+      "name": "licenselib",
+      "repo": "https://github.com/truenas/licenselib",
+      "ref": "master",
+      "commit": "8d5441c2f927ceb224c70ee53c06ef13f14ed6ea"
+    },
+    {
+      "name": "zectl",
+      "repo": "https://github.com/truenas/zectl",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "934daba9f93bd9223fadc3a465cb6b8f69e62db6"
+    },
+    {
+      "name": "ixdiagnose",
+      "repo": "https://github.com/truenas/ixdiagnose",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "fcdc05e3a90902a26c31daa580c5e10cdca5e9d6"
+    },
+    {
+      "name": "ixhardware",
+      "repo": "https://github.com/truenas/ixhardware",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "7b5f17e846877fc7cf0f1b14a8a9657556204286"
+    },
+    {
+      "name": "apps_validation",
+      "repo": "https://github.com/truenas/apps_validation",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "fee96186b390dd8db4aa54bdb1d03c427bd57627"
+    },
+    {
+      "name": "py_cryptit",
+      "repo": "https://github.com/truenas/py-cryptit",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "3e82404d034360b5f4ba92606321612c352431f2"
+    },
+    {
+      "name": "py_sgio",
+      "repo": "https://github.com/truenas/py-sgio",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "54e2dcb159225b005318fe5d524cf5f7caa7586b"
+    },
+    {
+      "name": "py_fenced",
+      "repo": "https://github.com/truenas/py-fenced",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "81f5e729942fa8ae2c65bff6a88b828c60d13306"
+    },
+    {
+      "name": "py_nvme",
+      "repo": "https://github.com/truenas/py-nvme",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "9ebf2614b2d0b9529facbc889394d2c6161efa06"
+    },
+    {
+      "name": "truenas",
+      "repo": "https://github.com/truenas/middleware",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "81e1265a86083888ba94a2bdfc02ff5c9c5ef6a3"
+    },
+    {
+      "name": "truenas_api_client",
+      "repo": "https://github.com/truenas/api_client",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "7b141b87bda0b0908b024d33eb4304923f66ec70"
+    },
+    {
+      "name": "truenas_verify",
+      "repo": "https://github.com/truenas/truenas_verify",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "14f4a451a9c96a1e4fc50036c61ee221530df97b"
+    },
+    {
+      "name": "midcli",
+      "repo": "https://github.com/truenas/midcli",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "53fb58492a720ba448585b089f156379ed5b6b28"
+    },
+    {
+      "name": "grub2",
+      "repo": "https://github.com/truenas/grub2",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "50c2e4b6d99a9fc8d9bec8eaa588ae9a55dc35f1"
+    },
+    {
+      "name": "parted",
+      "repo": "https://github.com/truenas/parted",
+      "ref": "master",
+      "commit": "77d4d1945e1b1dce981c919c6cc468afc2007564"
+    },
+    {
+      "name": "rclone",
+      "repo": "https://github.com/truenas/rclone",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "010427e5e64025c88247f537fcaf6ce938647cc9"
+    },
+    {
+      "name": "py_sg3",
+      "repo": "https://github.com/truenas/py-sg3",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "2195e4c741c0b4b396cc33753d673736221561cb"
+    },
+    {
+      "name": "smartmontools",
+      "repo": "https://github.com/truenas/smartmontools",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "f884dc995f00b95b7b5813ce767c60712df45438"
+    },
+    {
+      "name": "truenas_audit_rules",
+      "repo": "https://github.com/truenas/audit_rules.git",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "26ec3a7649d10254cf1053b3e970053617bf70fa"
+    },
+    {
+      "name": "nfs_utils",
+      "repo": "https://github.com/truenas/nfs-utils.git",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "0ef6c1d0c6c826cd687aa6f089e914c567498399"
+    }
+  ]
+}

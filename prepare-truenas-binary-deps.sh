@@ -3,9 +3,9 @@
 set -euo pipefail
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-ISO_NAME='TrueNAS-26.0.0-MASTER+20260805-020135.iso'
-ISO_SHA256='5e92df648d77b09fb3121607c3c2bf4aa67c291235e1ae413a4a8399fc172203'
-ISO_URL='https://download.truenas.com/TrueNAS-26-Nightlies/TrueNAS-26.0.0-MASTER%2B20260805-020135.iso?download=1'
+ISO_NAME='TrueNAS-26.0.0-BETA.3.iso'
+ISO_SHA256='5a4e174e4583b86a005015cacafc681eae91fc042df38354b42b376204416ada'
+ISO_URL='https://download.truenas.com/TrueNAS-26-BETA/26.0.0-BETA.3/TrueNAS-26.0.0-BETA.3.iso?download=1'
 CACHE_DIR=${TRUENAS_BINARY_DEPS_CACHE:-"$SCRIPT_DIR/tmp/truenas-binary-deps"}
 OUTPUT_DIR=${TRUENAS_BINARY_DEPS_OUTPUT:-"$SCRIPT_DIR/tmp/pkgdir"}
 
@@ -22,15 +22,15 @@ PACKAGES=(
 )
 
 EXPECTED_FILES=(
-    libtruenas-licensed-dev_20260805020933~truenas+1_amd64.deb
-    python3-truenas-pydiscovery_20260805022332~truenas+1_all.deb
-    python3-truenas-pysnmp_20260805022623~truenas+1_amd64.deb
-    python3-truenas-pylibsed_20260805022829~truenas+1_amd64.deb
-    python3-truenas-pylicensed_20260805020933~truenas+1_amd64.deb
-    python3-truenas-zfstierd_20260805031958~truenas+1_amd64.deb
-    truenas-file-manager_20260805021623~truenas+1_amd64.deb
-    truenas-licensed_20260805020933~truenas+1_amd64.deb
-    truesearch_20260805020935~truenas+1_amd64.deb
+    libtruenas-licensed-dev_20260819155535~truenas+1_amd64.deb
+    python3-truenas-pydiscovery_20260819162734~truenas+1_all.deb
+    python3-truenas-pysnmp_20260819155501~truenas+1_amd64.deb
+    python3-truenas-pylibsed_20260819170954~truenas+1_amd64.deb
+    python3-truenas-pylicensed_20260819155535~truenas+1_amd64.deb
+    python3-truenas-zfstierd_20260819172506~truenas+1_amd64.deb
+    truenas-file-manager_20260819163615~truenas+1_amd64.deb
+    truenas-licensed_20260819155535~truenas+1_amd64.deb
+    truesearch_20260819162936~truenas+1_amd64.deb
 )
 
 for command_name in bsdtar curl dpkg-deb dpkg-query sha256sum tar unsquashfs; do

@@ -5,7 +5,7 @@ import sys
 
 
 LEGACY_TRUENAS_VERSION_ERR_MSG = (
-    "Migrating TrueNAS CORE to TrueNAS SCALE 24.10 (or later) using update file upload is not supported. "
+    "Migrating TrueNAS CORE to TrueNAS 24.10 (or later) using update file upload is not supported. "
     "Please migrate with the latest 24.04 release update file or back up the TrueNAS configuration, perform a "
     "fresh install, and restore from the configuration backup."
 )
@@ -294,7 +294,9 @@ def main():
     if input.get("dataset_name"):
         dataset_name = input["dataset_name"]
     else:
-        dataset_name = f"{pool_name}/ROOT/{manifest['version']}"
+        # The `+` sign is part of the nightly build version name, but it is not a compatible character for a
+        # ZFS dataset name.
+        dataset_name = f"{pool_name}/ROOT/{manifest['version'].replace('+', '-')}"
 
         existing_datasets = set(filter(None, run_command(["zfs", "list", "-H", "-o", "name"]).stdout.split("\n")))
         if dataset_name in existing_datasets:
@@ -348,7 +350,6 @@ def main():
             run_command(["zfs", "create", "-u"] + options + [entry_dataset_name])
 
         with tempfile.TemporaryDirectory() as root:
-            undo = []
             ds_info = []
             run_command(["mount", "-t", "zfs", dataset_name, root])
             try:
@@ -364,7 +365,6 @@ def main():
                     os.makedirs(mp, exist_ok=True)
                     run_command(["mount", "-t", "zfs", f"{dataset_name}/{this_ds}", mp])
                     ds_info.append({"ds": ds_name, "guid": ds_guid, "fhs_entry": entry})
-                    undo.append(["umount", mp])
 
                 data_exclude = [
                     "data/factory-v1.db",
@@ -528,18 +528,9 @@ def main():
                     run_command(["systemd-machine-id-setup", f"--root={root}"])
 
                 run_command(["mount", "-t", "devtmpfs", "udev", f"{root}/dev"])
-                undo.append(["umount", f"{root}/dev"])
-
                 run_command(["mount", "-t", "proc", "none", f"{root}/proc"])
-                undo.append(["umount", f"{root}/proc"])
-
                 run_command(["mount", "-t", "sysfs", "none", f"{root}/sys"])
-                undo.append(["umount", f"{root}/sys"])
-                if os.path.exists("/sys/firmware/efi"):
-                    undo.append(["umount", f"{root}/sys/firmware/efi/efivars"])
-
                 run_command(["mount", "-t", "zfs", f"{pool_name}/grub", f"{root}/boot/grub"])
-                undo.append(["umount", f"{root}/boot/grub"])
 
                 # It will legitimately exit with code 2 if initramfs must be updated (which we'll do anyway)
                 write_progress(0.55, "Running autotune")
@@ -567,124 +558,130 @@ def main():
 
                 # Set bootfs before running update-grub
                 run_command(["zpool", "set", f"bootfs={dataset_name}", pool_name])
+                grub_updated = False
+                try:
+                    write_progress(0.7, "Preparing NVDIMM configuration")
+                    run_command(["chroot", root, "/usr/local/bin/truenas-nvdimm.py"])
+                    write_progress(0.71, "Preparing GRUB configuration")
+                    run_command(["chroot", root, "/usr/local/bin/truenas-grub.py"])
+                    write_progress(0.8, "Updating initramfs")
+                    cp = run_command([f"{root}/usr/local/bin/truenas-initrd.py", "-f", root], check=False)
+                    if cp.returncode > 1:
+                        raise subprocess.CalledProcessError(
+                            cp.returncode, f'Failed to execute truenas-initrd: {cp.stderr}'
+                        )
+                    write_progress(0.9, "Updating GRUB")
+                    run_command(["chroot", root, "update-grub"])
+                    grub_updated = True
 
-                write_progress(0.7, "Preparing NVDIMM configuration")
-                run_command(["chroot", root, "/usr/local/bin/truenas-nvdimm.py"])
-                write_progress(0.71, "Preparing GRUB configuration")
-                run_command(["chroot", root, "/usr/local/bin/truenas-grub.py"])
-                write_progress(0.8, "Updating initramfs")
-                cp = run_command([f"{root}/usr/local/bin/truenas-initrd.py", "-f", root], check=False)
-                if cp.returncode > 1:
-                    raise subprocess.CalledProcessError(
-                        cp.returncode, f'Failed to execute truenas-initrd: {cp.stderr}'
-                    )
-                write_progress(0.9, "Updating GRUB")
-                run_command(["chroot", root, "update-grub"])
+                    # We would like to configure fips bit as well here
+                    write_progress(0.95, "Configuring FIPS")
+                    run_command(["chroot", root, "/usr/bin/configure_fips"])
+                    run_grub_install = old_root is None
+                    if run_grub_install is False:
+                        # We will check if current BE has a different version of grub then the new/upcoming one
+                        # and if that is the case, we want to update ESP with newer grub binaries
+                        cp = run_command(["grub-install", "--version"])
+                        be_cp = run_command(["chroot", root, "grub-install", "--version"])
+                        # We expect something like "grub-install (GRUB) 2.12-1~bpo12+1"
+                        run_grub_install = cp.stdout.strip().split()[-1] != be_cp.stdout.strip().split()[-1]
 
-                # We would like to configure fips bit as well here
-                write_progress(0.95, "Configuring FIPS")
-                run_command(["chroot", root, "/usr/bin/configure_fips"])
-                run_grub_install = old_root is None
-                if run_grub_install is False:
-                    # We will check if current BE has a different version of grub then the new/upcoming one
-                    # and if that is the case, we want to update ESP with newer grub binaries
-                    cp = run_command(["grub-install", "--version"])
-                    be_cp = run_command(["chroot", root, "grub-install", "--version"])
-                    # We expect something like "grub-install (GRUB) 2.12-1~bpo12+1"
-                    run_grub_install = cp.stdout.strip().split()[-1] != be_cp.stdout.strip().split()[-1]
+                    if run_grub_install:
+                        write_progress(0.96, "Installing GRUB")
 
-                if run_grub_install:
-                    write_progress(0.96, "Installing GRUB")
-
-                    if os.path.exists("/sys/firmware/efi"):
-                        cmd = ["mount", "-t", "efivarfs", "efivarfs", f"{root}/sys/firmware/efi/efivars"]
-                        try:
-                            subprocess.run(cmd, **run_kw)
-                        except subprocess.CalledProcessError as e:
-                            if e.returncode == 32 and "efivarfs already mounted on" in e.stderr:
-                                pass
-                            else:
-                                write_error(f"Command {cmd} failed with exit code {e.returncode}: {e.stderr}")
-                                raise
-
-                        # Clean up dumps from NVRAM to prevent
-                        # "failed to register the EFI boot entry: No space left on device"
-                        for item in os.listdir("/sys/firmware/efi/efivars"):
-                            if item.startswith("dump-"):
-                                with contextlib.suppress(Exception):
-                                    os.unlink(os.path.join("/sys/firmware/efi/efivars", item))
-
-                    os.makedirs(f"{root}/boot/efi", exist_ok=True)
-                    for i, disk in enumerate(disks):
-                        if old_root is None:
-                            # Fresh installation - we know the layout
-                            efi_partition_number = 2
-                            run_command([
-                                "chroot", root, "grub-install", "--target=i386-pc", f"/dev/{disk}"
-                            ])
-                        else:
-                            partition_1_guid = None
+                        if os.path.exists("/sys/firmware/efi"):
+                            cmd = ["mount", "-t", "efivarfs", "efivarfs", f"{root}/sys/firmware/efi/efivars"]
                             try:
-                                partition_1_guid = get_partition_guid(disk, 1)
-                            except Exception:
-                                pass
+                                subprocess.run(cmd, **run_kw)
+                            except subprocess.CalledProcessError as e:
+                                if e.returncode == 32 and "efivarfs already mounted on" in e.stderr:
+                                    pass
+                                else:
+                                    write_error(f"Command {cmd} failed with exit code {e.returncode}: {e.stderr}")
+                                    raise
 
-                            if partition_1_guid == BIOS_BOOT_PARTITION_GUID:
+                            # Clean up dumps from NVRAM to prevent
+                            # "failed to register the EFI boot entry: No space left on device"
+                            for item in os.listdir("/sys/firmware/efi/efivars"):
+                                if item.startswith("dump-"):
+                                    with contextlib.suppress(Exception):
+                                        os.unlink(os.path.join("/sys/firmware/efi/efivars", item))
+
+                        os.makedirs(f"{root}/boot/efi", exist_ok=True)
+                        for i, disk in enumerate(disks):
+                            if old_root is None:
+                                # Fresh installation - we know the layout
+                                efi_partition_number = 2
                                 run_command([
                                     "chroot", root, "grub-install", "--target=i386-pc", f"/dev/{disk}"
                                 ])
-
-                            # EFI partition: position 2 (SCALE) or 1 (Core migrations)
-                            efi_partition_number = None
-                            if partition_1_guid == EFI_SYSTEM_PARTITION_GUID:
-                                efi_partition_number = 1
                             else:
+                                partition_1_guid = None
                                 try:
-                                    if get_partition_guid(disk, 2) == EFI_SYSTEM_PARTITION_GUID:
-                                        efi_partition_number = 2
+                                    partition_1_guid = get_partition_guid(disk, 1)
                                 except Exception:
                                     pass
 
-                            if efi_partition_number is None:
-                                continue
+                                if partition_1_guid == BIOS_BOOT_PARTITION_GUID:
+                                    run_command([
+                                        "chroot", root, "grub-install", "--target=i386-pc", f"/dev/{disk}"
+                                    ])
 
-                            if get_partition_guid(disk, efi_partition_number) != EFI_SYSTEM_PARTITION_GUID:
-                                continue
+                                # EFI partition: position 2 (SCALE) or 1 (Core migrations)
+                                efi_partition_number = None
+                                if partition_1_guid == EFI_SYSTEM_PARTITION_GUID:
+                                    efi_partition_number = 1
+                                else:
+                                    try:
+                                        if get_partition_guid(disk, 2) == EFI_SYSTEM_PARTITION_GUID:
+                                            efi_partition_number = 2
+                                    except Exception:
+                                        pass
 
-                        partition = get_partition(disk, efi_partition_number)
-                        run_command(["chroot", root, "mkdosfs", "-F", "32", "-s", "1", "-n", "EFI", partition])
+                                if efi_partition_number is None:
+                                    continue
 
-                        run_command(["chroot", root, "mount", "-t", "vfat", partition, "/boot/efi"])
-                        try:
-                            grub_cmd = ["chroot", root, "grub-install", "--target=x86_64-efi",
-                                        "--efi-directory=/boot/efi",
-                                        "--bootloader-id=debian",
-                                        "--recheck",
-                                        "--no-floppy",
-                                        "--no-nvram"]
-                            run_command(grub_cmd)
+                                if get_partition_guid(disk, efi_partition_number) != EFI_SYSTEM_PARTITION_GUID:
+                                    continue
 
-                            run_command(["chroot", root, "mkdir", "-p", "/boot/efi/EFI/boot"])
-                            run_command(["chroot", root, "cp", "/boot/efi/EFI/debian/grubx64.efi",
-                                         "/boot/efi/EFI/boot/bootx64.efi"])
+                            partition = get_partition(disk, efi_partition_number)
+                            run_command(["chroot", root, "mkdosfs", "-F", "32", "-s", "1", "-n", "EFI", partition])
 
-                            if os.path.exists("/sys/firmware/efi") and old_root is None:
-                                # Only create boot entry on fresh install.
-                                # On upgrades, the entry already exists from the original installation.
-                                run_command(["chroot", root, "efibootmgr", "-c",
-                                             "-d", f"/dev/{disk}",
-                                             "-p", f"{efi_partition_number}",
-                                             "-L", f"TrueNAS-{i}",
-                                             "-l", "/EFI/debian/grubx64.efi"])
-                        finally:
-                            run_command(["chroot", root, "umount", "/boot/efi"])
-                else:
-                    write_progress(0.96, "No need to update grub in ESP")
+                            run_command(["chroot", root, "mount", "-t", "vfat", partition, "/boot/efi"])
+                            try:
+                                grub_cmd = ["chroot", root, "grub-install", "--target=x86_64-efi",
+                                            "--efi-directory=/boot/efi",
+                                            "--bootloader-id=debian",
+                                            "--recheck",
+                                            "--no-floppy",
+                                            "--no-nvram"]
+                                run_command(grub_cmd)
+
+                                run_command(["chroot", root, "mkdir", "-p", "/boot/efi/EFI/boot"])
+                                run_command(["chroot", root, "cp", "/boot/efi/EFI/debian/grubx64.efi",
+                                             "/boot/efi/EFI/boot/bootx64.efi"])
+
+                                if os.path.exists("/sys/firmware/efi") and old_root is None:
+                                    # Only create boot entry on fresh install.
+                                    # On upgrades, the entry already exists from the original installation.
+                                    run_command(["chroot", root, "efibootmgr", "-c",
+                                                 "-d", f"/dev/{disk}",
+                                                 "-p", f"{efi_partition_number}",
+                                                 "-L", f"TrueNAS-{i}",
+                                                 "-l", "/EFI/debian/grubx64.efi"])
+                            finally:
+                                run_command(["chroot", root, "umount", "/boot/efi"])
+                    else:
+                        write_progress(0.96, "No need to update grub in ESP")
+                except Exception:
+                    if old_bootfs_prop != "-":
+                        run_command(["zpool", "set", f"bootfs={old_bootfs_prop}", pool_name])
+                        if grub_updated:
+                            run_command(["chroot", root, "update-grub"])
+
+                    raise
             finally:
-                for cmd in reversed(undo):
-                    run_command(cmd)
-
-                run_command(["umount", root])
+                run_command(["umount", "-R", root])
 
         for entry in TRUENAS_DATASETS:
             this_ds = f"{dataset_name}/{entry['name']}"
@@ -704,10 +701,9 @@ def main():
         run_command(["zfs", "set", "readonly=on", dataset_name])
         run_command(["zfs", "snapshot", f"{dataset_name}@pristine"])
     except Exception:
-        if old_bootfs_prop != "-":
-            run_command(["zpool", "set", f"bootfs={old_bootfs_prop}", pool_name])
         if cleanup:
-            run_command(["zfs", "destroy", "-r", dataset_name])
+            run_command(["zfs", "destroy", "-r", dataset_name], check=False)
+
         raise
 
     configure_system_for_zectl(pool_name)
