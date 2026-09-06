@@ -28,10 +28,10 @@ def digest(path, algorithm="sha256"):
 
 
 @contextlib.contextmanager
-def mounted(image, parent, name):
+def mounted(image, parent, name, options=""):
     target = parent / name
     target.mkdir()
-    run("mount", "-o", "loop,ro", str(image), str(target))
+    run("mount", "-o", "loop,ro" + ("," + options if options else ""), str(image), str(target))
     try:
         yield target
     finally:
@@ -74,9 +74,18 @@ def audit(iso, update, version):
     require(digest(iso) == Path(str(iso) + ".sha256").read_text().strip(), "ISO SHA-256 matches sidecar")
     with tempfile.TemporaryDirectory(prefix="truenas-iso-audit.") as tmp:
         parent = Path(tmp)
+        table = json.loads(run("sfdisk", "--json", str(iso)))["partitiontable"]
+        efi = [p for p in table["partitions"] if p["type"].upper() == "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"]
+        require(len(efi) == 1, "ISO has one EFI system partition")
+        sector = table["sectorsize"]
+        options = f"offset={efi[0]['start'] * sector},sizelimit={efi[0]['size'] * sector}"
+        with mounted(iso, parent, "efi", options) as esp:
+            require((esp / "efi/boot/bootx64.efi").is_file(), "EFI partition contains fallback bootloader")
+            require("source $prefix/grub.cfg" in (esp / "efi/debian/grub.cfg").read_text(),
+                    "EFI partition directs GRUB to the installer configuration")
         with mounted(iso, parent, "iso") as media:
             for file in ("boot/grub/grub.cfg", "EFI/debian/grub.cfg", "vmlinuz", "initrd.img",
-                         "live/filesystem.squashfs", ".disk/info"):
+                         "live/filesystem.squashfs", ".disk/info", "boot.catalog", "boot/grub/i386-pc/eltorito.img"):
                 require((media / file).is_file(), f"ISO contains {file}")
             with mounted(media / "live/filesystem.squashfs", parent, "live") as live:
                 installer = live / "usr/lib/python3/dist-packages/truenas_installer/install.py"
@@ -92,6 +101,8 @@ def audit(iso, update, version):
                 run("chroot", str(live), "python3", "-B", "-c",
                     "import truenas_installer.install; import licenselib.license")
                 print("PASS: installer Python imports succeed inside the ISO filesystem", flush=True)
+                require(run("systemctl", f"--root={live}", "is-enabled", "truenas-installer.service").strip() == "enabled",
+                        "installer service is enabled in the ISO")
                 require(digest(media / payload) == digest(update), "ISO payload equals preserved standalone update")
                 with mounted(media / payload, parent, "update") as outer:
                     manifest = json.loads((outer / "manifest.json").read_text())
@@ -104,6 +115,9 @@ def audit(iso, update, version):
                     zfs_load_plan(live, kernel)
                     with mounted(outer / "rootfs.squashfs", parent, "rootfs") as rootfs:
                         require((rootfs / "etc/version").read_text().strip() == version, "installed-system release identity matches")
+                        identity = json.loads((rootfs / "data/manifest.json").read_text())
+                        require(identity["version"] == version, "installed-system manifest release identity matches")
+                        require(identity["train"] == "TrueNAS-26-BETA", "installed-system update train is TrueNAS-26-BETA")
                         for tool in ("usr/local/bin/truenas-nvdimm.py", "usr/local/bin/truenas-grub.py",
                                      "usr/local/bin/truenas-initrd.py", "usr/bin/configure_fips",
                                      "usr/sbin/update-grub", "usr/sbin/grub-install", "data/factory-v1.db"):
