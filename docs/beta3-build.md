@@ -22,5 +22,28 @@ The public scale-build framework is deprecated. This branch retains our
 adapted build framework and targets the public BETA.3 component tags; it is
 not a checkout of an official BETA.3 build-framework tag.
 
-Build with `./sudo_build.sh release`. Run the ISO audit described in the
-artifact report before considering a newly generated ISO ready for testing.
+Build with `./sudo_build.sh release`. Inspect the result as root:
+
+```sh
+python3 scripts/audit-iso.py \
+  tmp/release/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428.iso \
+  update-artifacts/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428.update \
+  26.0.0-BETA.3-qzfs_ksmbd_qat428
+```
+
+The audit mounts images read-only and checks the actual shipped installer,
+payload, module load plans, and initrd bytes. It does not install to disks
+or load kernel modules. The previous 26.0.0 ISO fails this audit because its
+installer requests TrueNAS.update but its payload has the old filename.
+
+## Upstream provenance
+
+- Source revisions: `conf/beta3-sources.json` (46 BETA.3 tags and five retained
+  dependencies without that tag).
+- Binary dependency source: official `TrueNAS-26.0.0-BETA.3.iso`, SHA-256
+  `5a4e174e4583b86a005015cacafc681eae91fc042df38354b42b376204416ada`.
+- `truenas_install/__main__.py` synchronized from that verified ISO's
+  update payload; upstream manifest SHA-1
+  `80fb873c04d5614cd2eb563a57fac349235c2d85`.
+- APT repositories match those recorded in the official BETA.3 rootfs.
+  They are shared upstream mirrors, not immutable package snapshots.
