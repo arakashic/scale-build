@@ -155,6 +155,8 @@ base-packages:
   install_recommends: true
 - name: truenas
   install_recommends: true
+- name: truenas-initrd
+  install_recommends: true
 - name: wireguard-tools
   install_recommends: false
 - name: openzfs-zfs-modules-dbg
@@ -604,6 +606,9 @@ sources:
   branch: TS-26.0.0-BETA.3
 - name: truenas_installer
   repo: https://github.com/truenas/truenas-installer
+  branch: TS-26.0.0-BETA.3
+- name: truenas_initrd
+  repo: https://github.com/truenas/upgrade_pyutils
   branch: TS-26.0.0-BETA.3
 - name: scst
   repo: https://github.com/truenas/scst

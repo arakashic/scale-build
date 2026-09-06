@@ -2,6 +2,12 @@
   "release": "26.0.0-BETA.3",
   "sources": [
     {
+      "name": "truenas_initrd",
+      "repo": "https://github.com/truenas/upgrade_pyutils",
+      "ref": "TS-26.0.0-BETA.3",
+      "commit": "2c06acac070e8b497e247f1bbe9397ad64cc4889"
+    },
+    {
       "name": "truenas-openssl-provider-fips",
       "repo": "https://github.com/truenas/openssl-fips",
       "ref": "TS-26.0.0-BETA.3",

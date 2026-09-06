@@ -124,6 +124,8 @@ def audit(iso, update, version):
                                      "usr/local/bin/truenas-initrd.py", "usr/bin/configure_fips",
                                      "usr/sbin/update-grub", "usr/sbin/grub-install", "data/factory-v1.db"):
                             require((rootfs / tool).is_file(), f"post-install prerequisite exists: {tool}")
+                        run("chroot", str(rootfs), "python3", "-B", "/usr/local/bin/truenas-initrd.py", "--help")
+                        print("PASS: initrd helper and its Python imports execute inside the rootfs", flush=True)
                         config = (rootfs / "boot" / f"config-{kernel}").read_text()
                         for setting in ("CONFIG_CIFS=m", "CONFIG_CIFS_SMB_DIRECT=y", "CONFIG_SMB_SERVER=m",
                                         "CONFIG_SMB_SERVER_SMBDIRECT=y"):
@@ -156,7 +158,7 @@ def audit(iso, update, version):
                             require(run("modinfo", "-F", "vermagic", str(drivers[0])).split()[0] == kernel,
                                     "NVIDIA extension module matches production kernel")
                         print(run("dpkg-query", f"--admindir={rootfs}/var/lib/dpkg", "-W",
-                                  "-f=${Package}\t${Version}\n", "intel-qat", "ksmbd-tools", "middlewared",
+                                  "-f=${Package}\t${Version}\n", "intel-qat", "ksmbd-tools", "middlewared", "truenas-initrd",
                                   f"openzfs-zfs-modules-{kernel}"), end="")
     print("PASS: ISO artifact inspection completed; physical installation and boot remain untested.")
 

@@ -38,7 +38,7 @@ installer requests TrueNAS.update but its payload has the old filename.
 
 ## Upstream provenance
 
-- Source revisions: `conf/beta3-sources.json` (46 BETA.3 tags and five retained
+- Source revisions: `conf/beta3-sources.json` (47 BETA.3 tags and five retained
   dependencies without that tag).
 - Binary dependency source: official `TrueNAS-26.0.0-BETA.3.iso`, SHA-256
   `5a4e174e4583b86a005015cacafc681eae91fc042df38354b42b376204416ada`.
@@ -47,3 +47,8 @@ installer requests TrueNAS.update but its payload has the old filename.
   `80fb873c04d5614cd2eb563a57fac349235c2d85`.
 - APT repositories match those recorded in the official BETA.3 rootfs.
   They are shared upstream mirrors, not immutable package snapshots.
+
+The first BETA.3 artifact audit also found that `truenas-initrd.py` had moved
+out of middleware into `truenas/upgrade_pyutils`. The build now includes its
+`truenas-initrd` package from the BETA.3 tag. The audit requires that helper
+to exist and execute its argument parser with all Python imports resolved.
