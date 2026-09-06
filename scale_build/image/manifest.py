@@ -43,6 +43,7 @@ def build_manifest():
         f.write(json.dumps({
             'date': datetime.utcnow().isoformat(),
             'version': version,
+            'lts': False,
             'size': size,
             'checksums': checksums,
             'kernel_version': get_kernel_version(CHROOT_BASEDIR),

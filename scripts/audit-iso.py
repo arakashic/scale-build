@@ -107,6 +107,7 @@ def audit(iso, update, version):
                 with mounted(media / payload, parent, "update") as outer:
                     manifest = json.loads((outer / "manifest.json").read_text())
                     require(manifest["version"] == version, "update manifest release identity matches")
+                    require(manifest["lts"] is False, "update manifest identifies a non-LTS beta")
                     for file, expected in manifest["checksums"].items():
                         algorithm = {40: "sha1", 64: "sha256"}[len(expected)]
                         require(digest(outer / file, algorithm) == expected, f"update manifest checksum: {file}")
@@ -118,6 +119,7 @@ def audit(iso, update, version):
                         identity = json.loads((rootfs / "data/manifest.json").read_text())
                         require(identity["version"] == version, "installed-system manifest release identity matches")
                         require(identity["train"] == "TrueNAS-26-BETA", "installed-system update train is TrueNAS-26-BETA")
+                        require(identity["lts"] is False, "installed-system manifest identifies a non-LTS beta")
                         for tool in ("usr/local/bin/truenas-nvdimm.py", "usr/local/bin/truenas-grub.py",
                                      "usr/local/bin/truenas-initrd.py", "usr/bin/configure_fips",
                                      "usr/sbin/update-grub", "usr/sbin/grub-install", "data/factory-v1.db"):

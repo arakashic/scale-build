@@ -92,6 +92,7 @@ class BuildPackageMixin:
                     'train': get_truenas_train(),
                     'codename': get_release_code_name(),
                     'version': VERSION,
+                    'lts': False,
                 }))
             os.makedirs(os.path.join(self.package_source_with_chroot, 'etc'), exist_ok=True)
             with open(os.path.join(self.package_source_with_chroot, 'etc/version'), 'w') as f:
