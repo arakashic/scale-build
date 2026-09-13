@@ -29,6 +29,6 @@ Description: NAS RDMA diagnostics and benchmarks using distribution drivers
  benchmarks alongside Ethernet, firmware and storage diagnostics.
  .
  Uses the RDMA libraries and providers from the TrueNAS distribution and
- the drivers built with its kernel. No vendor OFED or DOCA driver stack,
- firmware updater, automatic NIC tuning or storage service is installed
- or enabled by this package.
+ the drivers built with its kernel. No vendor OFED or DOCA driver stack
+ is installed. Automatic firmware updates, NIC tuning and storage services
+ are not enabled by this package.

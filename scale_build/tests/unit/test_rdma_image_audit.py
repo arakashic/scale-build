@@ -21,3 +21,24 @@ def test_audit_rejects_missing_or_uninstalled_rdma_tools(tmp_path, status):
     assert callable(audit), 'ISO audit must validate installed RDMA tools'
     with pytest.raises(RuntimeError, match='nas-rdma-tools is installed'):
         audit(tmp_path, '6.18.42-production+truenas')
+
+
+@pytest.mark.parametrize('overrides, message', [
+    ({'libibverbs1': '57.0-1'}, 'use one package version'),
+    ({'mlnx-ofed-kernel-dkms': '26.07'}, 'vendor OFED package mlnx-ofed-kernel-dkms is absent'),
+])
+def test_audit_rejects_mixed_or_vendor_rdma_stack(tmp_path, overrides, message):
+    packages = dict.fromkeys([
+        'nas-rdma-tools', 'ibverbs-utils', 'rdmacm-utils', 'perftest', 'ibverbs-providers',
+        'libibverbs1', 'librdmacm1t64', 'libibumad3', 'iproute2', 'ethtool', 'mstflint', 'fio', 'iperf3',
+    ], '56.1-1')
+    packages.update(overrides)
+    database = tmp_path / 'var/lib/dpkg'
+    database.mkdir(parents=True)
+    (database / 'status').write_text(''.join(
+        f'Package: {name}\nStatus: install ok installed\nArchitecture: amd64\n'
+        f'Version: {version}\nMaintainer: Test <test@example.com>\nDescription: Test package\n\n'
+        for name, version in packages.items()
+    ))
+    with pytest.raises(RuntimeError, match=message):
+        audit_iso.audit_nas_rdma_tools(tmp_path, '6.18.42-production+truenas')

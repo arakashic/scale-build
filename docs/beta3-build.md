@@ -26,15 +26,51 @@ Build with `./sudo_build.sh release`. Inspect the result as root:
 
 ```sh
 python3 scripts/audit-iso.py \
-  tmp/release/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428.iso \
-  update-artifacts/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428.update \
-  26.0.0-BETA.3-qzfs_ksmbd_qat428
+  tmp/release/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1.iso \
+  update-artifacts/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1.update \
+  26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1
 ```
 
 The audit mounts images read-only and checks the actual shipped installer,
 payload, module load plans, and initrd bytes. It does not install to disks
 or load kernel modules. The previous 26.0.0 ISO fails this audit because its
 installer requests TrueNAS.update but its payload has the old filename.
+
+## Integrated NAS RDMA tools (rdma1 revision)
+
+The current default build suffix is `_rdma1`. The earlier BETA.3 update and
+ISO remain separate artifacts; the original verification record below is
+historical, not a claim that the earlier image contains the new tools.
+
+`nas-rdma-tools` is a native Debian metapackage in `packages/nas-rdma-tools`.
+It uses the existing Git-source/subdirectory package builder and is listed
+in `base-packages` with recommendations disabled. Its dependencies are
+installed into rootfs.squashfs before the update and ISO are assembled, so
+fresh installations and upgrades both contain the tools without a manual
+post-install package step. The live installer itself does not need these
+diagnostic packages.
+
+The BETA.3 manifest already excluded `mlnx-driver`; it remains excluded.
+The new package conflicts with the old bundle and vendor OFED kernel
+packages. It adds no NVIDIA repository, driver modules, service activation,
+module-loading policy, network configuration or automatic firmware update.
+Optional `sockperf` and `infiniband-diags` are only suggestions, not installed
+by default. See `packages/nas-rdma-tools/README.md` for the command list.
+
+The source entry references this repository's `26.0.0-BETA.3-qat` branch.
+Publish the packaging commit after review before expecting a fresh remote
+`make checkout` to find the new subdirectory. On future release branches,
+update that source reference along with the other release-specific refs.
+
+The ISO audit now additionally requires the installed metapackage and its
+dependencies, coherent RDMA library/provider/tool versions, executable
+diagnostics with resolved runtime libraries, and kernel-matched in-tree
+Mellanox/RDMA/storage modules. It rejects a staged `/opt/mlnx-driver` bundle
+or vendor `openibd`. The pre-rdma1 image intentionally fails the new RDMA
+package check; this does not invalidate its earlier installer audit.
+
+No live NAS or Spark installation is performed as part of this build.
+Physical boot and storage-protocol qualification remain separate checks.
 
 ## Upstream provenance
 
