@@ -72,6 +72,50 @@ package check; this does not invalidate its earlier installer audit.
 No live NAS or Spark installation is performed as part of this build.
 Physical boot and storage-protocol qualification remain separate checks.
 
+## Verified rdma1 artifacts (2026-09-13)
+
+- ISO: `tmp/release/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1.iso`
+  (SHA-256 `5378f6d0f3020ffe62a70db0f6788ec55ce075a2c790b60ec794d014086421da`).
+- Preserved update:
+  `update-artifacts/TrueNAS-SCALE-26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1.update`
+  (SHA-256 `5b6f183aa0ab63d917b43673b43008fa8abd9489d9b0a562717f42883e76cc4a`).
+- Full ISO audit passed, including exact equality with the preserved update:
+  `update-artifacts/26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1-iso-audit.txt`.
+- Old/new stack comparison and additional read-only utility execution passed:
+  `update-artifacts/26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1-stack-comparison.txt`.
+- The normal package, update and ISO builds exited successfully. The new
+  metapackage is `nas-rdma-tools` 1.0.1. All 17 build-framework unit tests pass.
+- Build source revisions and logs are preserved alongside the update as
+  `26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1-GITMANIFEST` and
+  `26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1-build-logs.tar.gz`. The image was built
+  from build-repository commit `a7743b9ccd24`; the audit-only correction is
+  in `04ac923d8bc8` and does not change the shipped package or image.
+
+The production kernel image and all 16 checked Mellanox/RDMA/storage,
+ksmbd, QAT and ZFS modules are byte-for-byte identical to the previous
+BETA.3 update. The RDMA libraries and providers remain 56.1-1, with identical
+shared-library payloads. No vendor OFED packages or manual bundle are present.
+
+The newly installed packages are the metapackage, ibverbs-utils 56.1-1,
+rdmacm-utils 56.1-1 and perftest 25.01.0+0.80-1. Other than the release
+metadata package, the remaining inventory difference is APT selecting
+busybox instead of busybox-static, both alternatives recommended by
+initramfs-tools-core. The extracted installed-system initrd successfully
+executes its own BusyBox and shell with their shipped dependencies.
+
+The first RDMA audit attempt exposed perftest's version-command exit
+convention: it prints `Version: 6.24` but returns status 1. The corrected
+audit accepts only the complete version response, with regression tests
+that still reject loader errors, extra error output and other exit statuses.
+The initial comparison report is retained with a `-before-audit-fix` suffix.
+No image rebuild or binary change was needed for that audit correction.
+
+All 13 older preserved updates passed their existing checksum checks before
+this build; the new preserved update passed its checksum check as well.
+Neither test machine was modified. This revision is artifact-checked, not
+qualified for physical installation, live NAS RDMA operation or production
+upgrades; the upstream recovery caveat below still applies.
+
 ## Upstream provenance
 
 - Source revisions: `conf/beta3-sources.json` (47 BETA.3 tags and five retained
