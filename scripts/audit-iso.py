@@ -70,6 +70,19 @@ def compare_initrd_payload(initrd, rootfs, parent):
         require(digest(matches[0]) == digest(rootfs / relative), f"initrd {module} equals rootfs module bytes")
 
 
+def audit_perftest_version(rootfs):
+    try:
+        output = run("chroot", str(rootfs), "ib_write_bw", "--version")
+    except subprocess.CalledProcessError as error:
+        # Upstream perftest routes VERSION_EXIT through its failure exit path.
+        if error.returncode != 1:
+            raise
+        output = error.output
+    require(re.fullmatch(r"Version: [0-9]+(?:\.[0-9]+)+\n", output) is not None,
+            "perftest version command executes and reports only its version")
+    print(output, end="", flush=True)
+
+
 def audit_nas_rdma_tools(rootfs, kernel):
     records = run("dpkg-query", f"--admindir={rootfs}/var/lib/dpkg", "-W",
                   "-f=${Package}\t${db:Status-Status}\t${Version}\n")
@@ -100,7 +113,7 @@ def audit_nas_rdma_tools(rootfs, kernel):
         require(path.is_file() and bool(path.stat().st_mode & 0o111), f"{tool} is executable in the installed image")
         linkage = run("chroot", str(rootfs), "ldd", f"/usr/bin/{tool}")
         require("not found" not in linkage, f"{tool} resolves its runtime libraries inside the image")
-    print(run("chroot", str(rootfs), "ib_write_bw", "--version"), end="", flush=True)
+    audit_perftest_version(rootfs)
 
 
 def audit(iso, update, version):

@@ -1,4 +1,5 @@
 import importlib.util
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -42,3 +43,27 @@ def test_audit_rejects_mixed_or_vendor_rdma_stack(tmp_path, overrides, message):
     ))
     with pytest.raises(RuntimeError, match=message):
         audit_iso.audit_nas_rdma_tools(tmp_path, '6.18.42-production+truenas')
+
+
+@pytest.mark.parametrize('exit_status, output, valid', [
+    (1, 'Version: 6.24\n', True),
+    (0, 'Version: 6.24\n', True),
+    (1, 'error while loading shared libraries\n', False),
+    (1, 'Version: 6.24\nUnexpected error\n', False),
+    (2, 'Version: 6.24\n', False),
+])
+def test_perftest_version_exit_convention(tmp_path, monkeypatch, exit_status, output, valid):
+    def run(*args):
+        assert args == ('chroot', str(tmp_path), 'ib_write_bw', '--version')
+        if exit_status:
+            raise subprocess.CalledProcessError(exit_status, args, output=output)
+        return output
+
+    monkeypatch.setattr(audit_iso, 'run', run)
+    check = getattr(audit_iso, 'audit_perftest_version', None)
+    assert callable(check), 'Audit must handle the perftest version exit convention'
+    if valid:
+        check(tmp_path)
+    else:
+        with pytest.raises((RuntimeError, subprocess.CalledProcessError)):
+            check(tmp_path)
