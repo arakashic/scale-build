@@ -1,0 +1,6 @@
+nas-rdma-tools (1.0.0) trixie; urgency=medium
+
+  * Install NAS RDMA diagnostics and benchmarks as normal image dependencies.
+  * Retain the distribution RDMA libraries and kernel-matched drivers.
+
+ -- TrueNAS Custom Build <no-reply@ixsystems.com>  Sun, 13 Sep 2026 00:00:00 +0000

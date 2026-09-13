@@ -1,0 +1,34 @@
+Source: nas-rdma-tools
+Section: net
+Priority: optional
+Maintainer: TrueNAS Custom Build <no-reply@ixsystems.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.2
+Rules-Requires-Root: no
+Homepage: https://github.com/arakashic/scale-build
+
+Package: nas-rdma-tools
+Architecture: all
+Depends: ${misc:Depends},
+ ibverbs-utils,
+ rdmacm-utils,
+ perftest,
+ ibverbs-providers,
+ libibverbs1,
+ librdmacm1t64,
+ libibumad3,
+ iproute2,
+ ethtool,
+ mstflint,
+ fio,
+ iperf3
+Conflicts: mlnx-driver, mlnx-ofed-kernel-dkms, mlnx-ofed-kernel-modules
+Suggests: sockperf, infiniband-diags
+Description: NAS RDMA diagnostics and benchmarks using distribution drivers
+ Installs RDMA device inspection, connection tests, bandwidth and latency
+ benchmarks alongside Ethernet, firmware and storage diagnostics.
+ .
+ Uses the RDMA libraries and providers from the TrueNAS distribution and
+ the drivers built with its kernel. No vendor OFED or DOCA driver stack,
+ firmware updater, automatic NIC tuning or storage service is installed
+ or enabled by this package.

@@ -191,6 +191,8 @@ base-packages:
   install_recommends: false
 - name: ksmbd-tools
   install_recommends: true
+- name: nas-rdma-tools
+  install_recommends: false
 
 #
 # Packages which are removed from the base TrueNAS SCALE System by default
@@ -369,6 +371,12 @@ iso-packages:
 # to be built
 ############################################################################
 sources:
+- name: nas-rdma-tools
+  repo: https://github.com/arakashic/scale-build
+  branch: 26.0.0-BETA.3-qat
+  subdir: packages/nas-rdma-tools
+  generate_version: false
+  jobs: 8
 - name: truenas-openssl-provider-fips
   repo: https://github.com/truenas/openssl-fips
   branch: TS-26.0.0-BETA.3

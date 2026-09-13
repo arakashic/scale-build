@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PARAM=${1:-all}
-VERSION=${2:-26.0.0-BETA.3-qzfs_ksmbd_qat428}
+VERSION=${2:-26.0.0-BETA.3-qzfs_ksmbd_qat428_rdma1}
 export TRUENAS_VERSION=$VERSION
 export TRUENAS_TRAIN=TrueNAS-26-BETA
 export SKIP_SOURCE_REPO_VALIDATION=1

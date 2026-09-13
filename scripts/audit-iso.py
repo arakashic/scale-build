@@ -70,6 +70,39 @@ def compare_initrd_payload(initrd, rootfs, parent):
         require(digest(matches[0]) == digest(rootfs / relative), f"initrd {module} equals rootfs module bytes")
 
 
+def audit_nas_rdma_tools(rootfs, kernel):
+    records = run("dpkg-query", f"--admindir={rootfs}/var/lib/dpkg", "-W",
+                  "-f=${Package}\t${db:Status-Status}\t${Version}\n")
+    installed = {}
+    for record in records.splitlines():
+        name, status, version = record.split("\t")
+        if status == "installed":
+            installed[name] = version
+    for package in ("nas-rdma-tools", "ibverbs-utils", "rdmacm-utils", "perftest", "ibverbs-providers",
+                    "libibverbs1", "librdmacm1t64", "libibumad3", "iproute2", "ethtool", "mstflint", "fio", "iperf3"):
+        require(package in installed, f"{package} is installed in the system image")
+        print(f"  {package}: {installed[package]}", flush=True)
+    for package in ("mlnx-driver", "mlnx-ofed-kernel-dkms", "mlnx-ofed-kernel-modules", "ofed-scripts"):
+        require(package not in installed, f"vendor OFED package {package} is absent")
+    require(not (rootfs / "opt/mlnx-driver").exists(), "no manual OFED bundle is staged under /opt")
+    require(not (rootfs / "etc/init.d/openibd").exists(), "no vendor openibd driver manager is installed")
+    rdma_versions = {installed[name] for name in ("libibverbs1", "ibverbs-providers", "librdmacm1t64",
+                                                "libibumad3", "ibverbs-utils", "rdmacm-utils")}
+    require(len(rdma_versions) == 1, "RDMA providers, libraries and diagnostic tools use one package version")
+    for module in ("mlx5_core", "mlx5_ib", "ib_core", "ib_uverbs", "rdma_cm", "rdma_ucm",
+                   "ksmbd", "rpcrdma", "ib_iser", "ib_isert", "nvme_rdma", "nvmet_rdma"):
+        path = run("chroot", str(rootfs), "modinfo", "-k", kernel, "-F", "filename", module).strip()
+        require(f"/modules/{kernel}/kernel/" in path, f"{module} resolves to the in-tree kernel stack")
+        require(run("modinfo", "-F", "vermagic", str(rootfs / path.lstrip("/"))).split()[0] == kernel,
+                f"{module} vermagic matches {kernel}")
+    for tool in ("ibv_devices", "ibv_devinfo", "rping", "ib_write_bw", "ib_read_bw", "ib_send_bw", "ib_write_lat"):
+        path = rootfs / "usr/bin" / tool
+        require(path.is_file() and bool(path.stat().st_mode & 0o111), f"{tool} is executable in the installed image")
+        linkage = run("chroot", str(rootfs), "ldd", f"/usr/bin/{tool}")
+        require("not found" not in linkage, f"{tool} resolves its runtime libraries inside the image")
+    print(run("chroot", str(rootfs), "ib_write_bw", "--version"), end="", flush=True)
+
+
 def audit(iso, update, version):
     require(digest(iso) == Path(str(iso) + ".sha256").read_text().strip(), "ISO SHA-256 matches sidecar")
     with tempfile.TemporaryDirectory(prefix="truenas-iso-audit.") as tmp:
@@ -130,6 +163,7 @@ def audit(iso, update, version):
                         for setting in ("CONFIG_CIFS=m", "CONFIG_CIFS_SMB_DIRECT=y", "CONFIG_SMB_SERVER=m",
                                         "CONFIG_SMB_SERVER_SMBDIRECT=y"):
                             require(setting in config.splitlines(), setting)
+                        audit_nas_rdma_tools(rootfs, kernel)
                         modules = rootfs / "usr/lib/modules" / kernel
                         depfile = (modules / "modules.dep").read_text()
                         zfs_line = next(line for line in depfile.splitlines() if line.startswith("extra/zcommon/zfs.ko:"))
