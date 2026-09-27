@@ -510,6 +510,10 @@ sources:
     - "apt install -y linux-image-truenas-production-amd64 linux-headers-truenas-production-amd64"
   prebuildcmd:
     - "tar zxvf MLNX_OFED_SRC-debian-24.10-3.2.5.0.tgz -C . --strip-components 1"
+    - "tar xzf SOURCES/mlnx-ofed-kernel_24.10.OFED.24.10.3.2.5.1.orig.tar.gz"
+    - "sed -i '/priv->nic_info.flags = UDP_TUNNEL_NIC_INFO_MAY_SLEEP |/{N;s/UDP_TUNNEL_NIC_INFO_MAY_SLEEP |\\n[[:space:]]*//;}' mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1/drivers/net/ethernet/mellanox/mlx5/core/en_main.c"
+    - "tar czf SOURCES/mlnx-ofed-kernel_24.10.OFED.24.10.3.2.5.1.orig.tar.gz mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1"
+    - "rm -rf mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1"
   buildcmd:
     - "dpkg-buildpackage -us -uc -b"
   explicit_deps:
