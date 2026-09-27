@@ -515,7 +515,7 @@ sources:
     - "tar czf SOURCES/mlnx-ofed-kernel_24.10.OFED.24.10.3.2.5.1.orig.tar.gz mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1"
     - "rm -rf mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1"
   buildcmd:
-    - "dpkg-buildpackage -us -uc -b"
+    - "dpkg-buildpackage -us -uc -b || { cat /tmp/OFED.*.logs/*.debbuild.log; exit 1; }"
   explicit_deps:
     - kernel
   generate_version: false
