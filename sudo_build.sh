@@ -19,6 +19,7 @@ case "$PARAM" in
         PACKAGES=openzfs-dbg PARALLEL_BUILDS=1 make -j8 packages
         PACKAGES=scst PARALLEL_BUILDS=1 make -j8 packages
         PACKAGES=scst-dbg PARALLEL_BUILDS=1 make -j8 packages
+        PACKAGES=mlnx-driver PARALLEL_BUILDS=1 make -j8 packages
         make -j8 packages
         make -j8 update
         make -j8 iso
