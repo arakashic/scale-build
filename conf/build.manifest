@@ -512,7 +512,7 @@ sources:
     - "tar zxvf MLNX_OFED_SRC-debian-24.10-3.2.5.0.tgz -C . --strip-components 1"
     - "tar xzf SOURCES/mlnx-ofed-kernel_24.10.OFED.24.10.3.2.5.1.orig.tar.gz"
     - "sed -i '/priv->nic_info.flags = UDP_TUNNEL_NIC_INFO_MAY_SLEEP |/{N;s/UDP_TUNNEL_NIC_INFO_MAY_SLEEP |\\n[[:space:]]*//;}' mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1/drivers/net/ethernet/mellanox/mlx5/core/en_main.c"
-    - "sed -E -i 's/(tls_offload_rx_resync_async_request_(start|end))\\((priv_rx->sk|sk),/\\1(tls_offload_ctx_rx(tls_get_ctx(\\3))->resync_async,/' mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ktls_rx.c"
+    - "sed -E -i 's/(tls_offload_rx_resync_async_request_(start|end))\\((priv_rx->sk|sk),/\\1(tls_offload_ctx_rx(tls_get_ctx(\\3))->resync_async,/' mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1/drivers/net/ethernet/mellanox/mlx5/core/en_accel/ktls_rx.c mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1/backports/0267-BACKPORT-drivers-net-ethernet-mellanox-mlx5-core-en_.patch"
     - "tar czf SOURCES/mlnx-ofed-kernel_24.10.OFED.24.10.3.2.5.1.orig.tar.gz mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1"
     - "rm -rf mlnx-ofed-kernel-24.10.OFED.24.10.3.2.5.1"
   buildcmd:
